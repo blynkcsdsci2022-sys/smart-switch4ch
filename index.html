@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
-<title>Smart Switch Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Smart Switch PRO</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -10,35 +13,80 @@
 <style>
 
 body{
-background:#0b0f1a;
-color:white;
+background:#0f172a;
 font-family:Arial;
+color:white;
 text-align:center;
 }
 
+.header{
+font-size:28px;
+margin-top:20px;
+}
+
+.info{
+margin:10px;
+font-size:15px;
+color:#ccc;
+}
+
+.container{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+padding:20px;
+}
+
 .card{
-width:250px;
-padding:30px;
-margin:20px;
-background:#1b2338;
+background:#1e293b;
+padding:25px;
 border-radius:15px;
+box-shadow:0 0 15px #000;
+}
+
+.switch{
+position:relative;
 display:inline-block;
+width:70px;
+height:38px;
 }
 
-button{
-width:120px;
-height:50px;
-font-size:18px;
-border:none;
-border-radius:10px;
+.switch input{
+opacity:0;
+width:0;
+height:0;
 }
 
-.on{
-background:#00c853;
+.slider{
+position:absolute;
+cursor:pointer;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:#444;
+transition:.4s;
+border-radius:34px;
 }
 
-.off{
-background:#d50000;
+.slider:before{
+position:absolute;
+content:"";
+height:30px;
+width:30px;
+left:4px;
+bottom:4px;
+background:white;
+transition:.4s;
+border-radius:50%;
+}
+
+input:checked + .slider{
+background:#00e676;
+}
+
+input:checked + .slider:before{
+transform:translateX(32px);
 }
 
 </style>
@@ -47,16 +95,61 @@ background:#d50000;
 
 <body>
 
-<h1>Smart Switch Dashboard</h1>
+<div class="header">
+⚡ Smart Switch Dashboard
+</div>
 
-<div id="relays"></div>
+<div class="info">
+Time : <span id="time">--</span>
+</div>
+
+<div class="info">
+WiFi RSSI : <span id="wifi">--</span>
+</div>
+
+<div class="container">
+
+<div class="card">
+<h3>Relay 1</h3>
+<label class="switch">
+<input type="checkbox" id="r1" onchange="toggle(1)">
+<span class="slider"></span>
+</label>
+</div>
+
+<div class="card">
+<h3>Relay 2</h3>
+<label class="switch">
+<input type="checkbox" id="r2" onchange="toggle(2)">
+<span class="slider"></span>
+</label>
+</div>
+
+<div class="card">
+<h3>Relay 3</h3>
+<label class="switch">
+<input type="checkbox" id="r3" onchange="toggle(3)">
+<span class="slider"></span>
+</label>
+</div>
+
+<div class="card">
+<h3>Relay 4</h3>
+<label class="switch">
+<input type="checkbox" id="r4" onchange="toggle(4)">
+<span class="slider"></span>
+</label>
+</div>
+
+</div>
 
 <script>
 
 var firebaseConfig = {
 
-apiKey: "YOUR_API_KEY",
-databaseURL: "https://YOUR_PROJECT.firebaseio.com/"
+apiKey: "AIzaSyDuza0bxW0kwz68Xdz6EJD4CM_riPs2-gY",
+
+databaseURL: "https://smart-switch-4ch-default-rtdb.firebaseio.com/"
 
 };
 
@@ -64,27 +157,43 @@ firebase.initializeApp(firebaseConfig);
 
 var db = firebase.database();
 
-function createRelay(id){
+function toggle(ch){
 
-var html = `
-<div class="card">
-<h2>Relay ${id}</h2>
-<button onclick="setRelay(${id},1)" class="on">ON</button>
-<button onclick="setRelay(${id},0)" class="off">OFF</button>
-</div>
-`;
+var state = document.getElementById("r"+ch).checked;
 
-document.getElementById("relays").innerHTML += html;
+db.ref("relay/"+ch+"/manual").set(state ? 1 : 0);
 
 }
 
-for(let i=1;i<=4;i++) createRelay(i);
+for(let i=1;i<=4;i++){
 
-function setRelay(id,val){
+db.ref("relay/"+i+"/status").on("value",(snap)=>{
 
-db.ref("relay/"+id+"/manual").set(val);
+var val = snap.val();
+
+document.getElementById("r"+i).checked = val==1;
+
+});
 
 }
+
+// clock
+setInterval(function(){
+
+var now = new Date();
+
+document.getElementById("time").innerHTML =
+now.toLocaleTimeString();
+
+},1000);
+
+// wifi
+db.ref("wifi/rssi").on("value",(snap)=>{
+
+document.getElementById("wifi").innerHTML =
+snap.val()+" dBm";
+
+});
 
 </script>
 
