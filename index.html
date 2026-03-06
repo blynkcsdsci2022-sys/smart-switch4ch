@@ -13,21 +13,20 @@
 <style>
 
 body{
-background:#0f172a;
+background:#0d0f14;
 font-family:Arial;
 color:white;
 text-align:center;
 }
 
 .header{
-font-size:28px;
+font-size:30px;
 margin-top:20px;
 }
 
-.info{
+.status{
 margin:10px;
-font-size:15px;
-color:#ccc;
+color:#bbb;
 }
 
 .container{
@@ -38,55 +37,25 @@ padding:20px;
 }
 
 .card{
-background:#1e293b;
+background:#1c1f26;
 padding:25px;
 border-radius:15px;
-box-shadow:0 0 15px #000;
 }
 
-.switch{
-position:relative;
-display:inline-block;
-width:70px;
-height:38px;
-}
-
-.switch input{
-opacity:0;
-width:0;
-height:0;
-}
-
-.slider{
-position:absolute;
-cursor:pointer;
-top:0;
-left:0;
-right:0;
-bottom:0;
+button{
+width:100%;
+padding:15px;
+font-size:18px;
+border:none;
+border-radius:10px;
 background:#444;
-transition:.4s;
-border-radius:34px;
+color:white;
+cursor:pointer;
 }
 
-.slider:before{
-position:absolute;
-content:"";
-height:30px;
-width:30px;
-left:4px;
-bottom:4px;
-background:white;
-transition:.4s;
-border-radius:50%;
-}
-
-input:checked + .slider{
+button.on{
 background:#00e676;
-}
-
-input:checked + .slider:before{
-transform:translateX(32px);
+color:black;
 }
 
 </style>
@@ -95,50 +64,32 @@ transform:translateX(32px);
 
 <body>
 
-<div class="header">
-⚡ Smart Switch Dashboard
-</div>
+<div class="header">Smart Switch 4CH</div>
 
-<div class="info">
-Time : <span id="time">--</span>
-</div>
-
-<div class="info">
-WiFi RSSI : <span id="wifi">--</span>
+<div class="status">
+WiFi RSSI : <span id="wifi">--</span> dBm
 </div>
 
 <div class="container">
 
 <div class="card">
 <h3>Relay 1</h3>
-<label class="switch">
-<input type="checkbox" id="r1" onchange="toggle(1)">
-<span class="slider"></span>
-</label>
+<button id="b1" onclick="toggle(1)">OFF</button>
 </div>
 
 <div class="card">
 <h3>Relay 2</h3>
-<label class="switch">
-<input type="checkbox" id="r2" onchange="toggle(2)">
-<span class="slider"></span>
-</label>
+<button id="b2" onclick="toggle(2)">OFF</button>
 </div>
 
 <div class="card">
 <h3>Relay 3</h3>
-<label class="switch">
-<input type="checkbox" id="r3" onchange="toggle(3)">
-<span class="slider"></span>
-</label>
+<button id="b3" onclick="toggle(3)">OFF</button>
 </div>
 
 <div class="card">
 <h3>Relay 4</h3>
-<label class="switch">
-<input type="checkbox" id="r4" onchange="toggle(4)">
-<span class="slider"></span>
-</label>
+<button id="b4" onclick="toggle(4)">OFF</button>
 </div>
 
 </div>
@@ -146,11 +97,7 @@ WiFi RSSI : <span id="wifi">--</span>
 <script>
 
 var firebaseConfig = {
-
-apiKey: "AIzaSyDuza0bxW0kwz68Xdz6EJD4CM_riPs2-gY",
-
-databaseURL: "https://smart-switch-4ch-default-rtdb.firebaseio.com/"
-
+databaseURL:"https://smart-switch-4ch-default-rtdb.firebaseio.com/"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -159,9 +106,11 @@ var db = firebase.database();
 
 function toggle(ch){
 
-var state = document.getElementById("r"+ch).checked;
+var btn = document.getElementById("b"+ch);
 
-db.ref("relay/"+ch+"/manual").set(state ? 1 : 0);
+var state = btn.classList.contains("on") ? 0 : 1;
+
+db.ref("relay/"+ch+"/manual").set(state);
 
 }
 
@@ -171,28 +120,26 @@ db.ref("relay/"+i+"/status").on("value",(snap)=>{
 
 var val = snap.val();
 
-document.getElementById("r"+i).checked = val==1;
+var btn = document.getElementById("b"+i);
+
+if(val==1){
+
+btn.innerHTML="ON";
+btn.classList.add("on");
+
+}else{
+
+btn.innerHTML="OFF";
+btn.classList.remove("on");
+
+}
 
 });
 
 }
 
-// clock
-setInterval(function(){
-
-var now = new Date();
-
-document.getElementById("time").innerHTML =
-now.toLocaleTimeString();
-
-},1000);
-
-// wifi
 db.ref("wifi/rssi").on("value",(snap)=>{
-
-document.getElementById("wifi").innerHTML =
-snap.val()+" dBm";
-
+document.getElementById("wifi").innerHTML = snap.val();
 });
 
 </script>
